@@ -11,8 +11,8 @@ SKIP_SUFFIXES = {".pyc", ".aux", ".log", ".out", ".toc", ".fls", ".fdb_latexmk",
 def main():
     output = ROOT / f"{NAME}.zip"
     files = []
-    for name in ("README.md", "pyproject.toml", "uv.lock", "submission_checks.json",
-                 "bin", "code", "config", "assert", "report", "results"):
+    for name in ("README.md", "LICENSE", "pyproject.toml", "uv.lock", "submission_checks.json",
+                 ".github", "bin", "code", "config", "assets", "report", "results"):
         path = ROOT / name
         if not path.exists():
             raise FileNotFoundError(path)

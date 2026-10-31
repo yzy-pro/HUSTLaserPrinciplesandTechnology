@@ -1,0 +1,74 @@
+name: Checks and Linux package
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: code -> target
+      - uses: astral-sh/setup-uv@v6
+        with:
+          enable-cache: true
+      - name: Rust checks
+        run: |
+          cargo fmt --manifest-path code/Cargo.toml -- --check
+          cargo test --locked --manifest-path code/Cargo.toml
+          cargo clippy --locked --manifest-path code/Cargo.toml --all-targets -- -D warnings
+      - name: Build executables
+        run: ./code/build.sh
+      - name: Compute and plot
+        run: |
+          ./bin/confocal-fox-li all
+          RUN=$(python3 -c 'import json; print("results/" + json.load(open("results/manifest.json"))["latest_run"])')
+          ./bin/laser-tools plot "$RUN"
+          ./bin/laser-tools prepare "$RUN"
+      - name: Install report tools
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends texlive-xetex texlive-lang-chinese poppler-utils
+      - name: Compile report
+        working-directory: report
+        run: |
+          xelatex -interaction=nonstopmode -halt-on-error report.tex
+          xelatex -interaction=nonstopmode -halt-on-error report.tex
+      - name: Check submission and package
+        run: |
+          python3 code/check_submission.py
+          python3 code/package_submission.py
+      - uses: actions/upload-artifact@v4
+        with:
+          name: submission-linux-x86_64
+          path: '*.zip'
+          if-no-files-found: error
+          retention-days: 14
+
+  release:
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: build
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: submission-linux-x86_64
+      - name: Attach submission to release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "$GITHUB_REF_NAME" ./*.zip \
+            --repo "$GITHUB_REPOSITORY" --title "$GITHUB_REF_NAME" --generate-notes

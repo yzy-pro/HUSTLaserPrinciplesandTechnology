@@ -13,3 +13,6 @@ dist/
 *.egg-info/
 *.spec
 *.zip
+/bin/
+/results/
+/submission_checks.json

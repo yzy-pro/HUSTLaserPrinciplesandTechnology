@@ -5,8 +5,7 @@
 构建、运行及报告编译方法见 [项目 README](../README.md)。
 
 - `src/`：配置解析、场与指标、Fresnel 传播、Fox–Li 迭代和实验调度。
-- `python/laser_tools/`：命令行入口、独立数值对照、绘图与报告插图整理。
-- `python/Python/`：独立对照所用的传播、网格、镜面、指标和绘图模块。
+- `python/laser_tools/`：命令行入口、绘图与报告插图整理；读取数值程序保存的复场和指标。
 - `build.sh`：使用 Cargo 和 uv 构建 `bin/` 中两个可执行文件。
 - `Cargo.toml` 和 `Cargo.lock`：数值程序依赖。
 

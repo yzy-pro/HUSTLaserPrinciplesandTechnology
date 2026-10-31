@@ -4,6 +4,7 @@ version = "0.1.0"
 edition = "2024"
 authors = ["陈恪瑾 <U202413925 光电信息科学与工程202409班>"]
 description = "Rust numerical implementation of a symmetric confocal cavity"
+license = "MIT"
 
 [dependencies]
 rustfft = "6.4"

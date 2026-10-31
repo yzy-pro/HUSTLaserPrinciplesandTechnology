@@ -6,11 +6,11 @@
 
 班级：光电信息科学与工程202409班
 
-报告见 [report/report.pdf](report/report.pdf)，LaTeX 源文件见 [report/report.tex](report/report.tex)。程序完成对称共焦腔的一维、二维 Fox–Li 迭代与单镜倾斜扫描。
+报告见 [report/report.pdf](report/report.pdf)，LaTeX 源文件见 [report/report.tex](report/report.tex)。Rust 完成传播、网格、镜面、指标与 Fox–Li 迭代，Python 读取保存的结果，完成绘图和报告整理。
 
 ## 直接运行
 
-`bin/` 中提供 **Linux x86_64** 可执行文件，已在 Ubuntu 24.04 / glibc 2.39 环境验证，无需另外安装 Python、uv 或 Rust。其他操作系统使用源码构建；本包不包含 Windows exe。
+提交压缩包中提供 `bin/` 下的 **Linux x86_64** 可执行文件，已在 Ubuntu 24.04 / glibc 2.39 环境验证，无需另外安装 Python、uv 或 Rust。源码仓库不跟踪 `bin/` 和 `results/`；从源码获取程序时先执行下面的构建命令。其他操作系统使用源码构建。
 
 解压后保留目录结构，在项目根目录执行：
 
@@ -21,12 +21,11 @@
 程序打印结果目录 `results/runs/<时间戳>/`。将下列 `RUN` 换成该目录名称：
 
 ```bash
-./bin/laser-tools verify results/runs/RUN
 ./bin/laser-tools plot results/runs/RUN
 ./bin/laser-tools prepare results/runs/RUN
 ```
 
-`verify` 完成独立数值对照；`plot` 生成图表；`prepare` 把插图和数值表更新到 `assert/` 和 `report/generated/`。前两条命令保留原始数据，不覆盖已有的检查或绘图清单。已有报告的数据目录见 `report/manifest.json`，无需再次计算即可查看报告和保存结果。
+`plot` 生成图表；`prepare` 把插图和数值表更新到 `assets/` 和 `report/generated/`。绘图保留原始数据，不覆盖已有绘图清单。提交包中报告的数据目录见 `report/manifest.json`，无需再次计算即可查看报告和保存结果。
 
 单独计算及帮助：
 
@@ -76,17 +75,17 @@ xelatex -interaction=nonstopmode -halt-on-error report.tex
 xelatex -interaction=nonstopmode -halt-on-error report.tex
 ```
 
-插图统一位于 `assert/`，表格和结果数值位于 `report/generated/`。
+插图统一位于 `assets/`，表格和结果数值位于 `report/generated/`。
 
 ## 提交文件
 
 | 路径 | 内容 |
 |---|---|
 | `report/` | PDF、LaTeX 源文件、数值表和数据来源清单 |
-| `assert/` | 最终报告插图和来源清单 |
+| `assets/` | 最终报告插图和来源清单 |
 | `bin/` | 数值程序与 Python 工具的可执行文件 |
 | `code/src/` | 数值程序源码 |
-| `code/python/` | 绘图、数值对照与报告整理源码 |
+| `code/python/` | 绘图与报告整理源码 |
 | `config/parameter.yaml` | 唯一参数文件 |
 | `results/` | 报告对应的场数据、迭代记录、扫描和数值检查 |
 | `code/Cargo.lock`、`uv.lock` | 依赖版本锁定文件 |
@@ -97,7 +96,14 @@ xelatex -interaction=nonstopmode -halt-on-error report.tex
 重新生成提交压缩包：
 
 ```bash
+python3 code/check_submission.py
 uv run --locked python code/package_submission.py
 ```
 
-压缩包只包含上表中的最终文件、运行说明和构建脚本，不包含 Git 历史、虚拟环境、编译缓存或 LaTeX 辅助文件。
+压缩包包含最终文件、运行说明、许可证和构建脚本，不包含 Git 历史、虚拟环境、编译缓存或 LaTeX 辅助文件。可执行文件和完整结果通过提交压缩包及 Release 附件分发。
+
+## 持续集成与许可
+
+GitHub Actions 在推送和 Pull Request 时执行格式检查、Rust 测试、Clippy、计算与绘图流程，并构建可执行文件作为 Actions 附件。推送 `v*` 标签时，工作流把 Linux 提交包上传为 GitHub Release 附件。
+
+项目采用 [MIT License](LICENSE)。

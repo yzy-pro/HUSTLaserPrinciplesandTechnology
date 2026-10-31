@@ -16,7 +16,7 @@ import yaml
 import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
-from Python.plots import plot_1d_fields, plot_2d_fields, plot_convergence, plot_tilt_scan
+from .plots import plot_1d_fields, plot_2d_fields, plot_convergence, plot_tilt_scan
 
 
 def read_fields(folder, stem=""):

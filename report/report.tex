@@ -28,7 +28,7 @@
 \begin{document}
 \maketitle
 \begin{abstract}
-本项目采用 Fox--Li 迭代法计算对称共焦腔的自再现模式，并研究单面反射镜倾斜后光场的变化。计算得到一维、二维基模均在六轮后满足收敛条件，镜面光斑半径约为 $0.184033\,\mathrm{mm}$，与理论高斯基模相符。令 M2 绕 $x$ 轴倾斜，小角度下 M1 的光斑中心近似按 $L\theta$ 移动，M2 的光斑中心基本不变，两个镜面上的光斑半径也变化不大。$2,3,5,6\,\mathrm{mrad}$ 在 3000 轮内未满足收敛条件，本文将这些角度作为迭代末态进行分析。直接积分、网格和窗口检查，以及与已有程序的比较，验证了计算结果。
+本项目采用 Fox--Li 迭代法计算对称共焦腔的自再现模式，并研究单面反射镜倾斜后光场的变化。计算得到一维、二维基模均在六轮后满足收敛条件，镜面光斑半径约为 $0.184033\,\mathrm{mm}$，与理论高斯基模相符。令 M2 绕 $x$ 轴倾斜，小角度下 M1 的光斑中心近似按 $L\theta$ 移动，M2 的光斑中心基本不变，两个镜面上的光斑半径也变化不大。$2,3,5,6\,\mathrm{mrad}$ 在 3000 轮内未满足收敛条件，本文将这些角度作为迭代末态进行分析。直接积分、能量守恒以及网格和窗口检查验证了计算结果。
 \end{abstract}
 \noindent\textbf{关键词：}共焦腔；Fox--Li 迭代；Fresnel 衍射；镜面倾斜；数值验证
 \tableofcontents
@@ -170,7 +170,7 @@ FFT 使用未归一化的正、逆变换，因此每个轴的逆变换后除以�
 
 本项目要求 $\delta_U<10^{-7}$、$\delta_I<10^{-7}$、$\delta_\gamma<10^{-8}$，并且连续五轮同时满足，记为收敛。中间一轮不满足时，稳定计数清零。首轮没有上一轮本征值，其变化记为空值，不计入完整收敛。迭代上限为 3000 轮，超过上限的角度以最后一轮结果记录。
 
-对于归一化秩一场，程序用两个轴的相位对齐差和正交分解计算二维误差，避免直接对两个接近 1 的重叠做减法而损失精度。随机非可分离场则逐元素计算。误差公式也与完整二维数组作了交叉验证。
+对于归一化秩一场，程序用两个轴的相位对齐差和正交分解计算二维误差，避免直接对两个接近 1 的重叠做减法而损失精度。随机非可分离场则逐元素计算。误差公式通过完整二维数组计算进行了检验。
 
 \subsection{光斑指标与代码结构}
 质心和二阶矩半径定义为
@@ -189,7 +189,7 @@ FFT 使用未归一化的正、逆变换，因此每个轴的逆变换后除以�
 \path{code/src/propagation.rs} & 一维/完整二维传播、直接积分、镜面算子\\
 \path{code/src/solver.rs} & 分离/完整数组 Fox--Li 迭代、随机初场\\
 \path{code/src/experiment.rs} & 实验调度、参数快照、CSV/JSON/二进制输出\\
-\path{code/python/laser_tools/verify_python.py} & 独立数值对照\\
+\path{code/python/laser_tools/plots.py} & 场分布、收敛曲线与倾斜扫描绘图\\
 \path{code/python/laser_tools/plot_results.py} & 保存场重建、图表和数值表生成\\
 \path{code/python/laser_tools/prepare_report.py} & 报告图片、表格与来源清单固定\\\bottomrule
 \end{tabular}
@@ -225,8 +225,6 @@ FFT 使用未归一化的正、逆变换，因此每个轴的逆变换后除以�
 \end{table}
 
 能量检查使用无孔径、无裁剪的周期 FFT 传播，此时传播前后总光强应保持不变。实际程序补零后还要截回有限窗口，窗口外的场会被舍去，因此这一步可能带来能量变化。另外，在 $512\times512$ 网格上比较完整二维和分离场的单次往返及若干轮迭代，两者的复场和本征值一致。
-
-将计算结果与原有 Python 程序进行对照，比较一维、二维基模和已收敛倾角的迭代次数、模式重叠及本征值。未收敛角度则对照保存末态的一次完整二维往返和 M2 场重建。结果保存在 \path{python_verification.json}。
 
 \subsection{网格、窗口与初场检查}
 为了确定离散化参数，基模分别取 $N=256,512,1024$，窗口半宽取 $5w_m,6w_m,8w_m$，孔径半宽保持 $4w_m$。这些检查参数放在同一 YAML 文件的 \path{validation} 节中。
@@ -361,9 +359,8 @@ AI 用于程序调试、公式核对、结果整理、绘图和 LaTeX 排版。�
 ./bin/confocal-fox-li baseline --mode 1d
 ./bin/confocal-fox-li tilt
 \end{lstlisting}
-绘图、数值对照和报告插图整理也提供了可执行入口。以下 RUN 代表程序打印的运行目录名称。数值对照和绘图命令保存结果清单，报告整理命令将最终插图放入 \path{assert/}。
+绘图和报告插图整理也提供了可执行入口。以下 RUN 代表程序打印的运行目录名称。绘图命令读取数值程序保存的场和指标，报告整理命令将最终插图放入 \path{assets/}。
 \begin{lstlisting}
-./bin/laser-tools verify results/runs/RUN
 ./bin/laser-tools plot results/runs/RUN
 ./bin/laser-tools prepare results/runs/RUN
 \end{lstlisting}
@@ -380,7 +377,7 @@ xelatex -interaction=nonstopmode -halt-on-error report.tex
 \section{数据文件说明}
 \path{manifest.json} 保存运行索引与每组参数，\path{parameter_used.yaml} 为实际参数快照。基模与各倾角文件夹保存 \path{summary.json}、\path{history.csv} 或带角度文件名；秩一场保存 \path{factors.csv}，完整随机场保存小端 \path{complex128} 行优先数组。Python 脚本输出 \path{fields.npz} 作为派生便携文件，不代替原始场数据。
 
-\path{report/manifest.json} 与 \path{assert/manifest.json} 记录报告图片对应的原始数据、参数快照和 SHA-256。表格与数值宏均由保存数据生成，报告中的数值与图表具有对应关系。
+\path{report/manifest.json} 与 \path{assets/manifest.json} 记录报告图片对应的原始数据、参数快照和 SHA-256。表格与数值宏均由保存数据生成，报告中的数值与图表具有对应关系。
 
 \begin{thebibliography}{9}
 \bibitem{kogelnik} Kogelnik H, Li T. Laser Beams and Resonators[J]. Applied Optics, 1966, 5(10): 起始页 1550. DOI: \href{https://doi.org/10.1364/AO.5.001550}{10.1364/AO.5.001550}.

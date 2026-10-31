@@ -3,7 +3,7 @@
   "source_run": "results/runs/20261031T100837Z",
   "images": [
     {
-      "file": "assert/baseline_1d_fields.png",
+      "file": "assets/baseline_1d_fields.png",
       "sha256": "85cfaf334705a510828898e04d6add6cfcec83a1dba835a9bc635a963c5c6c23",
       "source_data": [
         "results/runs/20261031T100837Z/baseline/1d/summary.json",
@@ -14,7 +14,7 @@
       "source_image": "results/runs/20261031T100837Z/figures/baseline_1d_fields.png"
     },
     {
-      "file": "assert/baseline_1d_convergence.png",
+      "file": "assets/baseline_1d_convergence.png",
       "sha256": "0efb0a01abe03c64ade85e12d19198a263f267d9d781acfb98a4f1ae5e687326",
       "source_data": [
         "results/runs/20261031T100837Z/baseline/1d/summary.json",
@@ -25,7 +25,7 @@
       "source_image": "results/runs/20261031T100837Z/figures/baseline_1d_convergence.png"
     },
     {
-      "file": "assert/baseline_2d_fields.png",
+      "file": "assets/baseline_2d_fields.png",
       "sha256": "ea0352162c8cec6e8f4419e090f5186f07c587efb8ffbc7b81796856b447782d",
       "source_data": [
         "results/runs/20261031T100837Z/baseline/2d/summary.json",
@@ -36,7 +36,7 @@
       "source_image": "results/runs/20261031T100837Z/figures/baseline_2d_fields.png"
     },
     {
-      "file": "assert/baseline_2d_convergence.png",
+      "file": "assets/baseline_2d_convergence.png",
       "sha256": "d8a9ccc76235917e08dafd6787c66b42b89b666aa378a8bc3e0cc9aa5a8b1d9c",
       "source_data": [
         "results/runs/20261031T100837Z/baseline/2d/summary.json",
@@ -47,7 +47,7 @@
       "source_image": "results/runs/20261031T100837Z/figures/baseline_2d_convergence.png"
     },
     {
-      "file": "assert/baseline_comparison.png",
+      "file": "assets/baseline_comparison.png",
       "sha256": "adc986090af08579ed943abf1b18891cd1472c8c1a0b5b8674207a502d97a25a",
       "source_data": [
         "results/runs/20261031T100837Z/baseline/1d/fields.npz",
@@ -57,7 +57,7 @@
       "source_image": "results/runs/20261031T100837Z/figures/baseline_comparison.png"
     },
     {
-      "file": "assert/tilt_scan.png",
+      "file": "assets/tilt_scan.png",
       "sha256": "d8f216c4a5b31b30141109fc8e8837a8bf9314a9d377fc4fcb3f227be1f89770",
       "source_data": [
         "results/runs/20261031T100837Z/tilt/scan.csv",
@@ -67,7 +67,7 @@
       "source_image": "results/runs/20261031T100837Z/figures/tilt_scan.png"
     },
     {
-      "file": "assert/tilt_0mrad_fields.png",
+      "file": "assets/tilt_0mrad_fields.png",
       "sha256": "53ae7bde7086fe81651f9b8a4f0b758b1bad5457ea4d163d547ef4f5074e4109",
       "source_data": [
         "results/runs/20261031T100837Z/tilt/factors_theta_0mrad.csv",
@@ -78,7 +78,7 @@
       "source_image": "results/runs/20261031T100837Z/figures/tilt_0mrad_fields.png"
     },
     {
-      "file": "assert/tilt_0mrad_convergence.png",
+      "file": "assets/tilt_0mrad_convergence.png",
       "sha256": "0399d5d90360fabe9e962ee4893067c484a6598e9a8e40dbe9e61886cc2b7039",
       "source_data": [
         "results/runs/20261031T100837Z/tilt/factors_theta_0mrad.csv",
@@ -89,7 +89,7 @@
       "source_image": "results/runs/20261031T100837Z/figures/tilt_0mrad_convergence.png"
     },
     {
-      "file": "assert/tilt_1mrad_fields.png",
+      "file": "assets/tilt_1mrad_fields.png",
       "sha256": "e4cafcbd38184caf64fd644a648621b5acb033ae9d241de63fb41a5fe446202e",
       "source_data": [
         "results/runs/20261031T100837Z/tilt/factors_theta_1mrad.csv",
@@ -100,7 +100,7 @@
       "source_image": "results/runs/20261031T100837Z/figures/tilt_1mrad_fields.png"
     },
     {
-      "file": "assert/tilt_1mrad_convergence.png",
+      "file": "assets/tilt_1mrad_convergence.png",
       "sha256": "626969970f493de054750665dc339a90db923c19831c7e5d872d5601e69dee79",
       "source_data": [
         "results/runs/20261031T100837Z/tilt/factors_theta_1mrad.csv",
@@ -111,7 +111,7 @@
       "source_image": "results/runs/20261031T100837Z/figures/tilt_1mrad_convergence.png"
     },
     {
-      "file": "assert/tilt_6mrad_fields.png",
+      "file": "assets/tilt_6mrad_fields.png",
       "sha256": "7d0faebbb717039a1fe141bcce4865504d32905b725c8d501c6a6f9275f17f41",
       "source_data": [
         "results/runs/20261031T100837Z/tilt/factors_theta_6mrad.csv",
@@ -122,7 +122,7 @@
       "source_image": "results/runs/20261031T100837Z/figures/tilt_6mrad_fields.png"
     },
     {
-      "file": "assert/tilt_6mrad_convergence.png",
+      "file": "assets/tilt_6mrad_convergence.png",
       "sha256": "8fe9b3b443c21ba48f16e5b0307e0d7e2ebb8e78df62b791392e9fb6dde5f711",
       "source_data": [
         "results/runs/20261031T100837Z/tilt/factors_theta_6mrad.csv",
@@ -133,7 +133,7 @@
       "source_image": "results/runs/20261031T100837Z/figures/tilt_6mrad_convergence.png"
     },
     {
-      "file": "assert/tilt_profiles.png",
+      "file": "assets/tilt_profiles.png",
       "sha256": "15dbf68fbc04867ddc21eecd487d2c50c92970ab5baee4619fa5241383878302",
       "source_data": [
         "results/runs/20261031T100837Z/tilt/factors_theta_0mrad.csv",
@@ -144,7 +144,7 @@
       "source_image": "results/runs/20261031T100837Z/figures/tilt_profiles.png"
     },
     {
-      "file": "assert/initial_field_diagnostics.png",
+      "file": "assets/initial_field_diagnostics.png",
       "sha256": "b98a847eb5cd12626565cabc9d05a5d58d287d7c669d037670b4fe5b365266d9",
       "source_data": [
         "results/runs/20261031T100837Z/validation.json",
@@ -160,7 +160,6 @@
     }
   ],
   "validation": "results/runs/20261031T100837Z/validation.json",
-  "python_verification": "results/runs/20261031T100837Z/python_verification.json",
   "generated_tables": [
     "report/generated/grid_table.tex",
     "report/generated/numbers.tex",
