@@ -1,5 +1,7 @@
 # 光学谐振腔自再现模式的仿真计算
 
+GitHub 仓库：[yzy-pro/HUSTLaserPrinciplesandTechnology](https://github.com/yzy-pro/HUSTLaserPrinciplesandTechnology)
+
 作者：陈恪瑾
 
 学号：U202413925
