@@ -1,0 +1,390 @@
+% 陈恪瑾 / U202413925 / 光电信息科学与工程202409班
+% 光学谐振腔自再现模式的仿真计算报告。
+\documentclass[UTF8,a4paper,11pt,fontset=fandol]{ctexart}
+\usepackage[margin=2.2cm]{geometry}
+\usepackage{amsmath,amssymb,bm,booktabs,graphicx,float,caption,subcaption}
+\usepackage{xcolor,listings,longtable,array}
+\usepackage[hidelinks]{hyperref}
+\usepackage{fancyhdr}
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{对称共焦腔 Fox--Li 仿真}
+\fancyhead[R]{陈恪瑾\quad U202413925}
+\fancyfoot[C]{\thepage}
+\setlength{\headheight}{15pt}
+\setlength{\parindent}{2em}
+\setlength{\parskip}{0.25em}
+\setlength{\emergencystretch}{2em}
+\captionsetup{font=small,labelfont=bf}
+\lstset{basicstyle=\ttfamily\small,breaklines=true,frame=single,columns=fullflexible,keepspaces=true}
+\input{generated/paths.tex}
+\input{generated/numbers.tex}
+\newcommand{\dd}{\mathrm{d}}
+\newcommand{\ii}{\mathrm{i}}
+\newcommand{\fig}[4]{\begin{figure}[htbp]\centering\includegraphics[width=#2\textwidth]{#1}\caption{#3}\label{#4}\end{figure}}
+\title{光学谐振腔自再现模式的仿真计算报告}
+\author{陈恪瑾\quad 学号：U202413925\\光电信息科学与工程202409班}
+\date{2026年10月30日}
+\begin{document}
+\maketitle
+\begin{abstract}
+本项目采用 Fox--Li 迭代法计算对称共焦腔的自再现模式，并研究单面反射镜倾斜后光场的变化。计算得到一维、二维基模均在六轮后满足收敛条件，镜面光斑半径约为 $0.184033\,\mathrm{mm}$，与理论高斯基模相符。令 M2 绕 $x$ 轴倾斜，小角度下 M1 的光斑中心近似按 $L\theta$ 移动，M2 的光斑中心基本不变，两个镜面上的光斑半径也变化不大。$2,3,5,6\,\mathrm{mrad}$ 在 3000 轮内未满足收敛条件，本文将这些角度作为迭代末态进行分析。直接积分、网格和窗口检查，以及与已有程序的比较，验证了计算结果。
+\end{abstract}
+\noindent\textbf{关键词：}共焦腔；Fox--Li 迭代；Fresnel 衍射；镜面倾斜；数值验证
+\tableofcontents
+\clearpage
+
+\noindent 阅读报告之前请先阅读项目 README。项目结构、启动方式和文件分布都在 README 中，程序的具体说明见 \path{code/README.md}。
+
+\section{建模}
+\subsection{问题分析}
+这个题目是根据激光原理第八讲和第九讲的 Fox--Li 迭代法，完成自再现模式的验证和仿真。与课件中的平面腔不同，题目要求的是对称共焦腔，所以需要考虑反射镜的曲率半径。根据 Kogelnik 和 Li 的文献\cite{kogelnik}，球面镜带来的光程差虽然很小，但与激光波长相比，仍然可能引起明显的相位变化。因此，传播距离的近似和镜面相位需要分别处理。
+
+本文完成一维、二维自再现模式计算，并分析单镜绕 $x$ 轴倾斜的情况。本次计算结果取自运行 \RunID，原始数据保存在 \RunPath。图表使用这次运行保存的场和迭代记录生成。
+
+\subsection{假设和参考面}
+两面凹球面镜的顶点参考平面间距为 $L$，曲率半径 $R_1=R_2=L$。使用自由空间标量近轴模型，波长为 $\lambda$，波数 $k=2\pi/\lambda$，实际电场约定为
+\begin{equation}
+ E_{\mathrm{phys}}=\operatorname{Re}\{u(x,y,z)e^{-\ii\omega t}\}.
+\end{equation}
+孔径内镜面的振幅反射率取 1，不考虑增益、饱和、偏振、吸收和透射。二维计算在 $x$、$y$ 方向取相同的孔径半宽，所以使用的是 $|x|\le a,|y|\le a$ 的方形孔径。球面反射按近轴情况处理：传播距离仍取 $L$，球面相对顶点平面的光程差用额外相位表示。
+
+所有 M1、M2 场均定义于各镜面\textbf{反射之后}。回程沿实际光传播方向使用正距离 $L$ 的传播算子；不把回程换成自由传播的逆算子。
+
+\subsection{从衍射积分得到 Fresnel 传播}
+把出发面放在 $z=0$，到达面放在 $z=L$。出发点坐标为 $(x',y',0)$，观察点坐标为 $(x,y,L)$，两点之间的距离为
+\begin{equation}
+ \rho=\sqrt{L^2+(x-x')^2+(y-y')^2}
+ \simeq L+\frac{(x-x')^2+(y-y')^2}{2L}.
+\end{equation}
+这里使用了 $\sqrt{1+\eta}\simeq1+\eta/2$ 的展开，其中 $\eta=[(x-x')^2+(y-y')^2]/L^2\ll1$。
+
+在振幅系数中，可以取 $1/\rho\simeq1/L$；指数中的 $\rho$ 则保留横向坐标的二次项。光程改变 $\Delta\rho$ 带来的相位差为 $k\Delta\rho=2\pi\Delta\rho/\lambda$，即使相对于腔长很小，相对于波长也可能很大。二维 Fresnel 传播为\cite{kogelnik}
+\begin{equation}\label{eq:prop}
+ (\mathcal P_Lu)(x,y)=\frac{e^{\ii kL}}{\ii\lambda L}
+ \iint u(x',y')\exp\!\left[\frac{\ii k}{2L}\big((x-x')^2+(y-y')^2\big)\right]\dd x'\dd y'.
+\end{equation}
+一维核的系数为 $e^{\ii kL}/\sqrt{\ii\lambda L}$，与二维情况不同。
+
+采用空间 Fourier 变换核 $e^{-\ii2\pi(f_xx+f_yy)}$，传播传递函数为
+\begin{equation}\label{eq:transfer}
+ H(f_x,f_y)=e^{\ii kL}e^{-\ii\pi\lambda L(f_x^2+f_y^2)}.
+\end{equation}
+Fresnel 核只与出发点和观察点的位置差有关，因此传播积分可以写成卷积。根据卷积定理，先对场做 FFT，在频域逐点乘 $H$，再做逆 FFT，就能得到传播后的场\cite{johnson}。这里空间核的二次相位是正号，频域传递函数的二次相位是负号，二者是 Fourier 变换关系。式\eqref{eq:prop}中的传播系数已经包含在 $H$ 中，不需要再乘一次。
+
+\subsection{曲率与倾斜相位}
+令横向半径 $r_\perp^2=x^2+y^2$。根据球面几何关系，有
+\begin{equation}
+ r_\perp^2+(R-h)^2=R^2,\qquad
+ h=R-\sqrt{R^2-r_\perp^2}\simeq\frac{x^2+y^2}{2R}.
+\end{equation}
+镜面向腔内突出 $h$ 后，入射和反射的近轴光程各减少 $h$，相对参考平面镜的光程差就是 $-2h$。按前文的时间约定，相位因子为 $e^{-\ii2kh}$。再把有限孔径写进去，得到镜面算子
+\begin{equation}\label{eq:mirror}
+ \mathcal M_j u=A_j(x,y)\exp\left[-\frac{\ii k(x^2+y^2)}{R_j}\right]u,
+ \quad
+ A_j=\begin{cases}1,&|x|\le a,|y|\le a,\\0,&\text{其余位置}.\end{cases}
+\end{equation}
+对于相同的横向坐标，曲率半径越小，二次相位变化越明显。这个相位因子的模长为 1，所以曲率本身只改变相位。孔径外的场被截去，才会直接带来损耗；曲率也会通过改变传播后的场分布，间接影响孔径截断。
+
+M2 绕 $x$ 轴倾斜时，按程序坐标正方向引入
+\begin{equation}
+ Q_\theta(y)=e^{\ii2ky\sin\theta},\qquad
+ \mathcal M_{2,\theta}=Q_\theta\mathcal M_2.
+\end{equation}
+镜面绕 $x$ 轴转动，高度变化发生在 $y$ 方向，所以倾斜相位只含 $y$。倾斜分析使用二维场，并采用相位屏近似，孔径固定在原参考坐标中。
+
+\subsection{往返本征问题与理论基模}
+在 M1 反射后参考面，往返算子为
+\begin{equation}
+ T=\mathcal M_1\mathcal P_L\mathcal M_{2,\theta}\mathcal P_L,
+ \qquad T[u]=\gamma u.
+\end{equation}
+如果一次往返后光场只多了一个整体复系数 $\gamma$，场的形状保持不变，就得到了自再现模式。$|\gamma|$ 表示振幅保留程度，辐角表示整体相位变化，对应的往返损耗为 $\mathcal L=1-|\gamma|^2$。由于模型没有加入镜面吸收和透射，这里的损耗主要来自有限孔径和计算窗口。
+
+共焦基模在镜面反射后近似为
+\begin{equation}
+ u_{00}(x,y)\propto e^{-(x^2+y^2)/w_m^2}e^{-\ii k(x^2+y^2)/(2L)},
+ \quad w_m=\sqrt{\frac{\lambda L}{\pi}}.
+\end{equation}
+相应束腰满足 $w_0=\sqrt{\lambda L/(2\pi)}$。$w_m$ 是振幅 $1/e$、强度 $1/e^2$ 半径。当前相位约定下，无限孔径的理论往返本征值为
+\begin{equation}
+ \gamma_{\mathrm{1D,th}}=e^{2\ii kL}e^{-\ii\pi/2},\qquad
+ \gamma_{\mathrm{2D,th}}=e^{2\ii kL}e^{-\ii\pi}.
+\end{equation}
+二维多了一个横向方向，也多了一份 Gouy 相位，因此一维和二维的本征值相位不同。
+
+\section{离散形式与程序实现}
+连续积分需要先把参考平面分成网格，再写成求和形式。二维直接求和的计算量较大，所以采用 FFT 加速。程序完成传播、镜面反射、迭代和指标计算，绘图脚本读取保存的结果并绘图。
+
+\subsection{网格、补零与 FFT 归一化}
+使用中心对齐、右端不重复的均匀网格
+\begin{equation}
+ x_p=\left(p-\frac N2\right)\Delta x,\qquad \Delta x=\frac{2X}{N},\quad p=0,\ldots,N-1.
+\end{equation}
+二维数组行对应 $y$，列对应 $x$。每个网格单元的面积为 $\Delta A=\Delta x\Delta y$，于是式\eqref{eq:prop}可以写成
+\begin{equation}
+ V[\ell,j]\simeq\frac{e^{\ii kL}}{\ii\lambda L}\Delta A
+ \sum_{q,p}U[q,p]\exp\!\left\{\frac{\ii k}{2L}
+ \left[(x_j-x_p)^2+(y_\ell-y_q)^2\right]\right\}.
+\end{equation}
+$\Delta A$ 来自积分的面积元，求和时计入该面积因子。镜面作用则在各网格点上乘相应的孔径和相位因子。
+
+FFT 加速后，单程传播写成
+\begin{equation}
+ V=\operatorname{IFFT2}\left[H\odot\operatorname{FFT2}(U)\right],
+\end{equation}
+其中 $\odot$ 表示对应元素相乘。为减小周期边界的影响，保持采样间距不变，把数组补零到每轴两倍点数，传播后再截回原窗口。网格和窗口的取值通过收敛检查确定。
+
+FFT 使用未归一化的正、逆变换，因此每个轴的逆变换后除以补零点数，二维除以其平方。频率采用 FFT 原生顺序 $0,1,\ldots,-2,-1$，不额外移动频谱。该顺序与相同顺序计算的式\eqref{eq:transfer}配对使用。
+
+\subsection{二维计算的可分离加速}
+当前模型中的方形孔径、球面二次相位和倾斜相位，都可以分别写成 $x$、$y$ 两个方向的乘积。如果初场也能写成 $U(y,x)=b(y)a(x)$，传播和反射后仍然保持这种形式。因此，对于高斯初场，只需要保存两个一维复数组，就能表示完整的二维场。
+
+两个方向分开计算时，纵向传播相位只计一次。程序把传播写成 $e^{\ii kL}P_yP_x$，将 $e^{\ii kL}$ 放在 $x$ 方向，$y$ 方向只计算横向衍射。完整二维 FFT 与分离计算的结果用于验证这一处理。
+
+普通二维 FFT 的单程计算量为 $\mathcal O(N^2\log N)$，存储量为 $\mathcal O(N^2)$；分离后分别降为 $\mathcal O(N\log N)$ 和 $\mathcal O(N)$。输出的 \path{factors.csv} 保存两个方向的实部和虚部，绘图时相乘即可重建二维场。对于一般随机场、圆孔或局部凸起，场和算子不一定可分离，所以程序也保留了完整二维 FFT，非可分离随机初场使用完整数组计算。
+
+\subsection{一次 Fox--Li 往返}
+输入场 $U_n$ 取在 M1 反射后。一次往返依次经过 M1 到 M2 的传播、M2 反射、返回 M1 的传播，以及 M1 反射：
+\begin{equation}
+ \widetilde U_{n+1}=M_1\odot\mathsf P
+ \left[M_{2,\theta}\odot\mathsf P(U_n)\right]=T[U_n].
+\end{equation}
+两程都沿实际光行进方向传播正距离 $L$。镜面的孔径和相位在空间域施加，每次反射后再计算下一程传播。
+
+得到未归一化的场后，用 Rayleigh 商估计往返本征值，再归一化：
+\begin{equation}
+ \gamma_n=\frac{\langle U_n,\widetilde U_{n+1}\rangle}{\langle U_n,U_n\rangle},\quad
+ U_{n+1}=\frac{\widetilde U_{n+1}}{\|\widetilde U_{n+1}\|_2}.
+\end{equation}
+均匀网格的面积元在分子和分母中相消。归一化是为了避免整体衰减影响场形比较，不表示实际光功率为 1；本征值仍然使用归一化之前的场计算，所以可以保留损耗信息。
+
+\subsection{收敛标准}
+即使已经得到自再现模式，相邻两轮场也可能相差一个整体相位。比如 $U_{n+1}=e^{\ii\phi}U_n$，光强和场形都没有变化，但直接相减仍可能得到较大的误差。因此先用内积确定整体相位，定义 $\eta_n=\langle U_n,U_{n+1}\rangle/|\langle U_n,U_{n+1}\rangle|$，再计算三项变化：
+\begin{align}
+ \delta_U&=\frac{\|U_{n+1}-\eta_nU_n\|_2}{\|U_{n+1}\|_2},\\
+ \delta_I&=\frac{\||U_{n+1}|^2-|U_n|^2\|_2}{\||U_{n+1}|^2\|_2},\\
+ \delta_\gamma&=\frac{|\gamma_n-\gamma_{n-1}|}{\max(|\gamma_n|,\epsilon)}.
+\end{align}
+第一项检查相位对齐后的复场，第二项检查光强，第三项检查本征值。复场指标反映幅度和相对相位分布，光强指标反映亮斑位置和宽度，本征值指标反映往返损耗和整体相位。
+
+本项目要求 $\delta_U<10^{-7}$、$\delta_I<10^{-7}$、$\delta_\gamma<10^{-8}$，并且连续五轮同时满足，记为收敛。中间一轮不满足时，稳定计数清零。首轮没有上一轮本征值，其变化记为空值，不计入完整收敛。迭代上限为 3000 轮，超过上限的角度以最后一轮结果记录。
+
+对于归一化秩一场，程序用两个轴的相位对齐差和正交分解计算二维误差，避免直接对两个接近 1 的重叠做减法而损失精度。随机非可分离场则逐元素计算。误差公式也与完整二维数组作了交叉验证。
+
+\subsection{光斑指标与代码结构}
+质心和二阶矩半径定义为
+\begin{equation}
+ \bar y=\frac{\sum y|U|^2}{\sum |U|^2},\quad
+ w_y=2\sqrt{\frac{\sum(y-\bar y)^2|U|^2}{\sum |U|^2}},\quad
+ \eta(U,V)=\frac{|\langle U,V\rangle|^2}{\langle U,U\rangle\langle V,V\rangle}.
+\end{equation}
+对于高斯场，$w_y$ 就是强度降到中心 $1/e^2$ 时的半径。场形发生畸变后，这个量仍可描述光斑宽度，但只表示二阶矩等效半径。重叠 $\eta$ 同时比较振幅和相位，用来观察计算场与参考场是否接近。
+
+\begin{table}[htbp]\centering\small
+\begin{tabular}{ll}\toprule
+文件 & 职责\\\midrule
+\path{code/src/config.rs} & YAML 读取、单位和模型约束校验\\
+\path{code/src/field.rs} & 网格、复场、范数、重叠与光斑指标\\
+\path{code/src/propagation.rs} & 一维/完整二维传播、直接积分、镜面算子\\
+\path{code/src/solver.rs} & 分离/完整数组 Fox--Li 迭代、随机初场\\
+\path{code/src/experiment.rs} & 实验调度、参数快照、CSV/JSON/二进制输出\\
+\path{code/python/laser_tools/verify_python.py} & 独立数值对照\\
+\path{code/python/laser_tools/plot_results.py} & 保存场重建、图表和数值表生成\\
+\path{code/python/laser_tools/prepare_report.py} & 报告图片、表格与来源清单固定\\\bottomrule
+\end{tabular}
+\caption{程序与配套脚本的分工。}
+\end{table}
+
+\section{仿真参数与数值检查}
+\subsection{仿真参数}
+\begin{table}[htbp]\centering
+\begin{tabular}{ll}\toprule
+参数 & 数值\\\midrule
+波长、腔长、两镜曲率半径 & $1064\,\mathrm{nm}$；$L=R_1=R_2=0.10\,\mathrm m$\\
+镜面光斑半径、孔径半宽 & $w_m\simeq0.184033\,\mathrm{mm}$；$a=4w_m$\\
+计算窗口半宽、补零倍数 & $X=6w_m$；每轴补零到两倍点数\\
+一维、二维网格 & $2048$；$512\times512$\\
+采样间距 & 一维约 $1.0783\,\mu\mathrm m$；二维约 $4.3133\,\mu\mathrm m$\\
+最大迭代次数、连续稳定轮数 & $3000$；$5$\\
+基准初场 & 带镜面曲率相位的理论 HG00\\
+倾斜镜面、角度 & M2；$0,0.1,0.3,0.5,1,2,3,5,6\,\mathrm{mrad}$\\
+初场延续 & 关闭，各角度独立从几何匹配初场出发\\
+基准随机种子 & $20261006$，仅随机或扰动实验实际使用\\\bottomrule
+\end{tabular}
+\caption{仿真参数，取自本次保存的 \protect\path{parameter_used.yaml}。}\label{tab:parameters}
+\end{table}
+
+所有可调参数从 \path{config/parameter.yaml} 读取。初场选用带镜面曲率相位的高斯场。非零倾角下，按几何关系将 M1 初场中心移到 $y_0=L\sin\theta$，额外斜率取 $-\sin\theta$，用来加快迭代。最后的质心仍由计算得到的光强分布求出。
+
+\subsection{直接积分、能量与完整二维校验}
+小网格直接 Fresnel 求和使用 $N=128$，二维积分利用核的可分离性作两次矩阵乘法，复杂度为 $\mathcal O(N^3)$。它与 FFT 路径的数值实现不同，能够检查符号、归一化和传播系数。校验结果见表\ref{tab:verification}。
+\begin{table}[htbp]\centering\small
+\input{generated/verification_table.tex}
+\caption{数值检查结果。直接积分与 FFT 使用相同的光滑匹配场，详细数据见 \protect\path{validation.json}。}\label{tab:verification}
+\end{table}
+
+能量检查使用无孔径、无裁剪的周期 FFT 传播，此时传播前后总光强应保持不变。实际程序补零后还要截回有限窗口，窗口外的场会被舍去，因此这一步可能带来能量变化。另外，在 $512\times512$ 网格上比较完整二维和分离场的单次往返及若干轮迭代，两者的复场和本征值一致。
+
+将计算结果与原有 Python 程序进行对照，比较一维、二维基模和已收敛倾角的迭代次数、模式重叠及本征值。未收敛角度则对照保存末态的一次完整二维往返和 M2 场重建。结果保存在 \path{python_verification.json}。
+
+\subsection{网格、窗口与初场检查}
+为了确定离散化参数，基模分别取 $N=256,512,1024$，窗口半宽取 $5w_m,6w_m,8w_m$，孔径半宽保持 $4w_m$。这些检查参数放在同一 YAML 文件的 \path{validation} 节中。
+\begin{table}[htbp]\centering\small
+\input{generated/grid_table.tex}
+\caption{基模网格与窗口检查。数据来自 \protect\path{validation.json} 的 \protect\path{grid_window_convergence}；其余参数见保存快照。}\label{tab:grid}
+\end{table}
+
+初场也会影响收敛。在 $N=64$ 上，分别取“HG00 加复随机扰动”和完整二维复随机高斯场，每种初场使用三个相邻随机种子，最多迭代 200 轮。前一种是在归一化的一维因子上叠加 $0.05$ 倍复随机样本，这个系数表示数组扰动幅度。
+
+六组计算在给定迭代次数内均未满足联合判据，说明当前共焦、大孔径条件下，普通 Fox--Li 迭代对初场比较敏感。匹配高斯场的快速收敛对应于已知基模分支。
+\fig{initial_field_diagnostics.png}{0.95}{初场诊断的相位对齐复场变化。左：匹配场加扰动；右：非可分离随机场。$N=64$，$\theta=0$，$L=R_1=R_2=0.10\,\mathrm m$，$\lambda=1064\,\mathrm{nm}$，最多 200 轮。三种 seed 的完整历史保存在本次运行目录。}{fig:initial}
+
+\section{1D 仿真及其分析}
+\subsection{振幅和相位分布}
+一维仿真采用 $2048$ 个网格点，其他参数见表\ref{tab:parameters}。M1、M2 的场都取在镜面反射之后。图中的 amplitude 是振幅，phase 是相位，光强则是振幅的平方。每轮迭代都进行了归一化，下面主要比较场的形状。
+\fig{baseline_1d_fields.png}{0.86}{两镜面上的一维振幅和相位。$N=2048$，$\theta=0$，两倍补零；M1、M2 均为反射后场，横坐标单位为 mm。}{fig:1d}
+
+图\ref{fig:1d}上面的两条振幅曲线都是中间高、两边低的钟形，关于 $x=0$ 对称。两面镜子上的曲线宽度几乎相同，符合腔的对称结构。到达孔径边缘之前，振幅已经很小，所以孔径对这个光斑的截断较弱。
+
+下面的相位曲线呈开口向下的抛物线，与前文的二次相位一致：
+\begin{equation}
+ \phi(x)\simeq\phi_0-\frac{kx^2}{2L}.
+\end{equation}
+两镜面的相位读数可以不同，因为传播会带来整体相位变化，但曲线形状基本一致。振幅低于峰值 $10^{-3}$ 的区域没有显示相位，避免弱场区域的相位噪声影响观察。
+
+\subsection{与理论结果比较}
+\fig{baseline_comparison.png}{0.72}{理论 HG00 振幅、一维数值结果及二维中心截面的比较。曲线各自按峰值归一化，只比较形状；M1 反射后，$\theta=0$。}{fig:comparison}
+
+图\ref{fig:comparison}中的理论曲线、一维结果和二维中心截面基本重合，说明计算得到的光斑形状与理论相符。程序得到镜面光斑半径为 $\OneRadius\,\mathrm{mm}$，与 $w_m=\sqrt{\lambda L/\pi}$ 一致。在距离中心 $w_m$ 的位置，振幅降为中心的 $1/e$，光强降为中心的 $1/e^2$。数值场与理论场的复重叠也接近 1，说明相位分布同样比较接近。
+
+\subsection{收敛结果与本征值}
+一维程序在第 \OneIterations 轮满足收敛条件，第 2 至第 6 轮连续满足三项判据。往返本征值为
+\begin{equation}
+ \gamma_{\mathrm{1D}}\simeq\OneGamma,\qquad |\gamma_{\mathrm{1D}}|\simeq1.
+\end{equation}
+这表示光场往返后形状基本不变，只多了整体相位，振幅几乎没有衰减。这里收敛较快，是因为初场已经接近理论基模；随机初场的迭代表现则明显不同。
+\fig{baseline_1d_convergence.png}{0.98}{一维迭代的复场误差、光强与本征值变化。首轮本征值变化未定义，第 2 至第 6 轮连续满足联合判据。}{fig:1dconv}
+
+\section{2D 仿真及其分析}
+\subsection{振幅和相位分布}
+二维仿真采用 $512\times512$ 网格，采样间距约为 $4.313\,\mu\mathrm m$，其他物理参数与一维相同。程序在 $x$、$y$ 方向取相同的孔径半宽，使用方形孔径。
+\fig{baseline_2d_fields.png}{0.82}{二维共焦基模的两镜面振幅与相位。$N=512$，$\theta=0$；均为反射后场，横纵坐标单位为 mm，相位单位为 rad。外围白色为低振幅屏蔽区域。}{fig:2d}
+
+图\ref{fig:2d}上排的亮斑位于中心，接近圆形，颜色从中心向外逐渐变暗。两面镜子的亮斑大小基本相同，也没有明显的多瓣结构，这与一维的钟形曲线对应。虽然孔径是方形，但两个方向的聚焦相同，而且光斑比孔径小，所以基模仍接近圆对称。
+
+下排相位图出现同心圆环，是因为相位主要随离中心的距离变化。图中只显示 $[-\pi,\pi]$ 内的相位，超过这个范围后按 $2\pi$ 折回，因此颜色会重复。圆环表示相位包裹，不是光强亮环。外围白色部分是没有显示相位的低振幅区域。
+
+\subsection{收敛与本征值}
+二维计算同样在第 \TwoIterations 轮收敛，两个方向的半径均约为 $\TwoRadius\,\mathrm{mm}$。对应的往返本征值为
+\begin{equation}
+ \gamma_{\mathrm{2D}}\simeq\TwoGamma,\qquad |\gamma_{\mathrm{2D}}|\simeq1.
+\end{equation}
+与一维相比，本征值的相位不同，但模都接近 1，与前文的理论表达式相符。孔径半宽约为光斑半径的四倍，光斑尾部到达边缘时已经很弱，因此往返损耗很小。接近零的损耗处于浮点舍入误差量级，只表示当前模型中的孔径截断很弱。
+\fig{baseline_2d_convergence.png}{0.98}{二维迭代收敛曲线。复场、光强和本征值三项变化连续五轮低于阈值，程序在第六轮停止。}{fig:2dconv}
+
+\section{倾斜仿真及其分析}
+\subsection{倾斜设置}
+令 M2 绕 $x$ 轴转动，使用前文的倾斜相位 $Q_\theta(y)=e^{\ii2ky\sin\theta}$。每个角度独立迭代，扫描角度依次取
+\begin{equation*}
+ \theta=0,0.1,0.3,0.5,1,2,3,5,6\,\mathrm{mrad}.
+\end{equation*}
+为使相邻采样点之间的倾斜相位变化不超过 $\pi$，要求
+\begin{equation}
+ 2k\Delta y|\sin\theta_{\max}|<\pi.
+\end{equation}
+本次最大相位步长为 $\MaxPhaseStep\,\mathrm{rad}$，满足这个采样条件。倾斜场的网格敏感程度由后面的网格检查给出。
+
+\subsection{随倾角变化的结果}
+\begin{table}[htbp]\centering\small
+\input{generated/scan_table.tex}
+\caption{倾角扫描结果。未收敛角度的模式指标用横线表示，最后一轮的结果另列于表\ref{tab:unconv}。数据来自 \protect\path{tilt/scan.csv}。}\label{tab:scan}
+\end{table}
+\fig{tilt_scan.png}{1.0}{质心、光斑半径与重叠、损耗、迭代次数随 M2 倾角的变化。红色空心点和红叉表示未收敛结果。质心拟合使用 $0$--$0.5\,\mathrm{mrad}$ 的收敛点。}{fig:scan}
+
+图\ref{fig:scan}第一幅图中，M1 的光斑中心随倾角增大向正 $y$ 方向移动，M2 的中心基本不变。对 $0$--$0.5\,\mathrm{mrad}$ 的 M1 质心作线性拟合，得到斜率 $\CentroidSlope\,\mathrm{mm/mrad}$，符合 $\bar y_{\mathrm{M1}}\simeq L\theta$。例如 $1\,\mathrm{mrad}$ 时，M1 的位移约为 $0.10\,\mathrm{mm}$。
+
+第二幅图中，小角度下两镜面的光斑半径基本不变，但与零倾角基模的重叠逐渐下降。半径的单位是 mm，重叠没有单位，需要分别看。第三幅图的收敛点损耗都很小，说明这时孔径截断较弱；两镜面的曲线对应同一个往返损耗，所以基本重合。第四幅图表明倾角增大后更难收敛，$1\,\mathrm{mrad}$ 需要 32 轮，更大的几个角度都达到 3000 轮上限。
+
+\subsection{小角度下的光斑和相位}
+\fig{tilt_1mrad_fields.png}{0.82}{$\theta=1\,\mathrm{mrad}$ 的收敛场，$N=512$，32 轮。M1 亮斑沿 $+y$ 位移，M2 亮斑接近中心，但相位随倾斜改变。均为反射后场。}{fig:tilt1}
+与未倾斜时相比，图\ref{fig:tilt1}中 M1 的亮斑向上移动了约 $0.1\,\mathrm{mm}$，但仍接近圆形。M2 的亮斑基本留在原点，下排相位却发生了变化，说明波前也受到了倾斜影响。M1 的光斑不再关于原光轴对称，但关于自己的新中心仍近似对称。
+\fig{tilt_profiles.png}{0.94}{收敛小倾角的 $x=0$ 强度截面，分别按峰值归一化。M1 截面沿 $y$ 平移，M2 截面基本重合。}{fig:profiles}
+
+图\ref{fig:profiles}中，M1 的峰值位置依次为 $0,0.05,0.10\,\mathrm{mm}$，宽度几乎不变；M2 的几条强度曲线基本重合。
+
+两镜面偏移不同，可以结合腔轴几何理解\cite{kogelnik}：$R=L$ 时，M2 的曲率中心位于 M1 顶点附近。M2 倾斜后，曲率中心横移约 $L\theta$，腔轴也随之改变，因此 M1 处的光斑偏移，而 M2 处仍接近原点。
+
+重叠下降不等于光功率损失。$1\,\mathrm{mrad}$ 时与零倾角模式的重叠约为 $0.744336$，但往返损耗仍很小，主要是光斑位置和相位与原模式不同。本文以模式重叠描述场形差异，不将其解释为特定阶数的 HG 模式比例。
+
+\subsection{大角度结果与未收敛情况}
+$2,3,5,6\,\mathrm{mrad}$ 在 3000 轮内未满足收敛条件。表\ref{tab:unconv}列出最后一轮的误差和投影损耗。投影损耗由末态 Rayleigh 商计算，用于描述该迭代末态；实际传播的范数比另存为 \path{rho}。
+\begin{table}[htbp]\centering\small
+\input{generated/unconverged_table.tex}
+\caption{未收敛倾角在第 3000 轮的误差与投影指标，来自各倾角 \protect\path{history} 和 \protect\path{scan.csv}。}\label{tab:unconv}
+\end{table}
+\fig{tilt_6mrad_fields.png}{0.82}{$\theta=6\,\mathrm{mrad}$ 时第 3000 轮的场分布，记录为迭代末态。均为反射后场，横纵坐标单位为 mm，相位单位为 rad。}{fig:tilt6}
+
+图\ref{fig:tilt6}中，M1 的亮斑移到约 $y=0.60\,\mathrm{mm}$，沿 $y$ 方向变窄；M2 的亮斑则沿 $y$ 拉长，已经与小角度时不同。M1 光斑中心距孔径边缘约 $0.136\,\mathrm{mm}$，小于原光斑半径，孔径截断可能使场分布发生明显变化。下排相位条纹变密，但条纹数不能直接当作模式阶数。这张图表示的是最后一轮的场形。
+\fig{tilt_6mrad_convergence.png}{0.98}{$6\,\mathrm{mrad}$ 时的迭代变化。复场误差约为 $8.1\times10^{-4}$，光强变化约为 $1.43\times10^{-3}$，均高于 $10^{-7}$ 的阈值。}{fig:tilt6conv}
+
+图\ref{fig:tilt6conv}中的误差先快速下降，之后停在约 $10^{-3}$ 量级，光强变化也仍有起伏。本征值的变化已经较小，但复场和光强指标仍高于收敛阈值，因此该结果记录为迭代末态。
+
+改变网格点数后得到的结果见表\ref{tab:tiltgrid}。$1\,\mathrm{mrad}$ 在三个网格上均收敛，半径也基本一致；$6\,\mathrm{mrad}$ 均以迭代末态结束，最后一轮半径存在差异。
+\begin{table}[htbp]\centering\small
+\input{generated/tilt_grid_table.tex}
+\caption{倾斜场网格诊断，最大迭代次数仍为 3000。$6\,\mathrm{mrad}$ 的质心和半径为末态描述，非稳定模式参数。数据来自 \protect\path{validation.json}。}\label{tab:tiltgrid}
+\end{table}
+
+共焦腔存在模式简并的特点\cite{kogelnik}。从幂法来看，当两个主要本征值的模很接近时，迭代会变慢\cite{saad}，这与大角度下的慢收敛现象一致。迭代末态反映给定初场和迭代次数下的场形，不等同于腔内全部自再现模式。
+
+\section{误差分析}
+这次计算主要有模型和数值两方面的误差。模型采用标量近轴近似，球面和倾斜都用参考平面上的相位表示，没有考虑非近轴传播、偏振和旋转后孔径投影的变化。数值计算使用有限窗口，补零可以减弱周期边界影响，但传播后截回原窗口仍可能舍去部分场。
+
+另外，接近零的损耗受到浮点精度限制，普通 Fox--Li 迭代也对初场和本征值分布比较敏感。基模的网格和窗口检查结果比较一致；大角度的场形和收敛结果则表现出更强的初场和网格依赖。
+
+对于当前模型，方形孔径、球面二次相位和单镜线性倾斜均可沿两个坐标方向分离，因而高斯初场可以采用分离形式计算；随机初场则采用完整二维数组。局部凸起等不能分离的镜面扰动不属于本文模型范围。
+
+\section{AI辅助记录}
+AI 用于程序调试、公式核对、结果整理、绘图和 LaTeX 排版。本人完成了问题分析、物理建模、曲率和倾斜相位推导、参数调试与结果分析。公式核对过程中，AI 曾忽略球面镜曲率带来的相位影响，也曾将曲率光程差的正负号写反；根据球面几何和传播相位检查后，对相应推导作了修正。二维分离传播中，纵向相位只计一次，以保证往返本征值相位正确。大倾角结果依据复场、光强和本征值三项指标综合判断。
+
+\section{结论}
+计算得到的一维、二维共焦腔基模与理论高斯场基本一致，镜面光斑半径约为 $0.184033\,\mathrm{mm}$。使用接近理论基模的初场时，两种计算都在六轮后满足收敛条件。本征值的模接近 1，相位差也与一维、二维的理论传播相位相符。
+
+小角度倾斜主要使 M1 光斑沿 $y$ 方向偏移，并改变波前相位，M2 的光斑中心和两镜面半径变化不大。重叠随倾角增大而下降，但这不等于功率损失。$2,3,5,6\,\mathrm{mrad}$ 在给定的 3000 轮内未满足联合判据，本文将其作为迭代末态描述；大角度下的场形变化主要表现为光斑偏移、孔径截断和相位条纹变密。
+
+\appendix
+\section{运行、绘图与编译}
+提交材料中的可执行文件位于 \path{bin/}，适用于 Linux x86\_64。在项目根目录运行以下命令，参数从 \path{config/parameter.yaml} 读取，运行目录由程序打印。
+\begin{lstlisting}
+./bin/confocal-fox-li all
+./bin/confocal-fox-li baseline --mode 1d
+./bin/confocal-fox-li tilt
+\end{lstlisting}
+绘图、数值对照和报告插图整理也提供了可执行入口。以下 RUN 代表程序打印的运行目录名称。数值对照和绘图命令保存结果清单，报告整理命令将最终插图放入 \path{assert/}。
+\begin{lstlisting}
+./bin/laser-tools verify results/runs/RUN
+./bin/laser-tools plot results/runs/RUN
+./bin/laser-tools prepare results/runs/RUN
+\end{lstlisting}
+源码构建使用 Cargo 和 uv，Python 依赖由 \path{uv.lock} 锁定。构建及报告编译命令为
+\begin{lstlisting}
+./code/build.sh
+uv run --locked laser-tools --help
+cd report
+xelatex -interaction=nonstopmode -halt-on-error report.tex
+xelatex -interaction=nonstopmode -halt-on-error report.tex
+\end{lstlisting}
+\path{code/Cargo.lock} 固定数值程序依赖；\path{pyproject.toml} 和 \path{uv.lock} 记录 Python 工具及其依赖。本次工具链版本、操作系统和执行命令保存在运行目录的环境记录中。
+
+\section{数据文件说明}
+\path{manifest.json} 保存运行索引与每组参数，\path{parameter_used.yaml} 为实际参数快照。基模与各倾角文件夹保存 \path{summary.json}、\path{history.csv} 或带角度文件名；秩一场保存 \path{factors.csv}，完整随机场保存小端 \path{complex128} 行优先数组。Python 脚本输出 \path{fields.npz} 作为派生便携文件，不代替原始场数据。
+
+\path{report/manifest.json} 与 \path{assert/manifest.json} 记录报告图片对应的原始数据、参数快照和 SHA-256。表格与数值宏均由保存数据生成，报告中的数值与图表具有对应关系。
+
+\begin{thebibliography}{9}
+\bibitem{kogelnik} Kogelnik H, Li T. Laser Beams and Resonators[J]. Applied Optics, 1966, 5(10): 起始页 1550. DOI: \href{https://doi.org/10.1364/AO.5.001550}{10.1364/AO.5.001550}.
+\bibitem{johnson} Johnson M M. Direct Application of the Fast Fourier Transform to Open Resonator Calculations[J]. Applied Optics, 1974, 13(10): 起始页 2326. DOI: \href{https://doi.org/10.1364/AO.13.002326}{10.1364/AO.13.002326}.
+\bibitem{saad} Saad Y. Numerical Methods for Large Eigenvalue Problems[M]. 2nd ed. Philadelphia: SIAM, 2011. \href{https://www-users.cse.umn.edu/~saad/eig_book_2ndEd.pdf}{作者公开全文}.
+\end{thebibliography}
+\end{document}

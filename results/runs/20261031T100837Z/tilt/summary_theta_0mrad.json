@@ -1,0 +1,51 @@
+{
+  "aperture_half_width_m": 0.0007361322912624369,
+  "converged": true,
+  "dx_m": 4.313275144115841e-6,
+  "dy_m": 4.313275144115841e-6,
+  "final_errors": {
+    "delta": 5.652123751392228e-9,
+    "eigenvalue_difference": 1.494683490070457e-15,
+    "gamma_abs": 0.9999999999999981,
+    "gamma_imag": 0.45504250612024094,
+    "gamma_phase": 2.669172705550381,
+    "gamma_real": -0.8904697174097538,
+    "intensity_difference": 2.6643471298116332e-9,
+    "iteration": 6,
+    "loss": 3.6637359812630166e-15,
+    "power_retention": 0.9999999999999963,
+    "rho": 0.9999999999999999
+  },
+  "gamma_abs": 0.9999999999999981,
+  "gamma_imag": 0.45504250612024094,
+  "gamma_phase_rad": 2.669172705550381,
+  "gamma_real": -0.8904697174097538,
+  "implementation": "rust",
+  "initialization": "gaussian",
+  "iterations": 6,
+  "m1": {
+    "hg00_overlap": 0.9999999999999898,
+    "mode_radius_x_m": 0.00018403307281562902,
+    "mode_radius_y_m": 0.00018403307281562902,
+    "x_centroid_m": -1.0399207976109778e-20,
+    "y_asymmetry": 4.4054923704666734e-16,
+    "y_centroid_m": 3.5563901025871825e-21,
+    "zero_angle_overlap": null
+  },
+  "m2": {
+    "hg00_overlap": 0.9999999999999909,
+    "mode_radius_x_m": 0.00018403307281562409,
+    "mode_radius_y_m": 0.00018403307281562406,
+    "x_centroid_m": -1.5273467589910964e-20,
+    "y_asymmetry": 5.125235029608284e-16,
+    "y_centroid_m": -2.5257171147441785e-20,
+    "zero_angle_overlap": null
+  },
+  "n": 512,
+  "representation": "exact_separable_2d",
+  "round_trip_loss": 3.6637359812630166e-15,
+  "seed": 20261006,
+  "stop_reason": "all three criteria met for consecutive iterations",
+  "theta_mrad": 0.0,
+  "window_half_width_m": 0.0011041984368936554
+}

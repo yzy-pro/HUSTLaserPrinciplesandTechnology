@@ -1,0 +1,59 @@
+{
+  "date": "2026-10-31",
+  "platform": "Linux-7.0.0-34-generic-x86_64-with-glibc2.39",
+  "architecture": "x86_64",
+  "libc": [
+    "glibc",
+    "2.39"
+  ],
+  "source_run": "results/runs/20261031T100837Z",
+  "rust_unit_tests": {
+    "passed": true,
+    "count": 4
+  },
+  "cargo_clippy": {
+    "passed": true,
+    "warnings": 0
+  },
+  "numerical_validation": {
+    "passed": true,
+    "count": 18
+  },
+  "python_verification": {
+    "passed": true,
+    "count": 34
+  },
+  "relocated_executables": {
+    "passed": true,
+    "working_directory": "outside submission folder",
+    "checks": [
+      "both help commands",
+      "1D/2D baseline, six iterations",
+      "standalone Python plotting, five figures"
+    ]
+  },
+  "python_distributions": {
+    "wheel_build_passed": true,
+    "sdist_build_passed": true
+  },
+  "report": {
+    "xelatex_passes": 2,
+    "pages": 18,
+    "figure_references": 11,
+    "asset_manifest_images": 14,
+    "figure_and_source_hash_checks_passed": true,
+    "draft_or_pending_review_wording_present": false
+  },
+  "executables": [
+    {
+      "path": "bin/confocal-fox-li",
+      "size_bytes": 2134520,
+      "sha256": "9864f7cecee96dcd8e00962077b8d7408d16e5d1013d70c4e129a7ad866f4d6c"
+    },
+    {
+      "path": "bin/laser-tools",
+      "size_bytes": 47974304,
+      "sha256": "ead1409ece97e9e86691de48f9a19150376c82ab3f0d4d91defb70acdf0a762d"
+    }
+  ]
+}
